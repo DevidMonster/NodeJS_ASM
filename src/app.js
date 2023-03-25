@@ -13,14 +13,13 @@ app.use(express.json())
 app.use('/api', productRouter)
 app.use('/auth', authRouter)
 
-function connect() {
-    try {
-        mongoose.connect(process.env.URL_DB)
-        console.log("You have connected to mongodb");
-    } catch (err) {
-        console.log(err)
-    }
+
+try {
+    mongoose.connect(process.env.URL_DB)
+    console.log("You have connected to mongodb");
+} catch (err) {
+    console.log(err)
 }
-connect()
+
 
 export const viteNodeApp = app;
