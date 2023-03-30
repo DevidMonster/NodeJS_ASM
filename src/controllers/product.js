@@ -84,6 +84,7 @@ const patchProducts = async (req, res) => {
 
 const createProducts = async (req, res) => {
     try {
+        console.log(req.user);
         const { error } = productSchema.validate(req.body, { abortEarly: false })
         if (error) {
             const errs = []
