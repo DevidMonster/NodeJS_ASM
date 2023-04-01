@@ -5,7 +5,7 @@ import cors from 'cors';
 
 import productRouter from './routes/product';
 import authRouter from './routes/auth';
-import categories from './models/categories';
+import categoryRouter from './routes/category';
 
 //config
 dotenv.config()
@@ -17,6 +17,7 @@ app.use(cors())
 
 //router
 app.use('/api', productRouter)
+app.use('/api', categoryRouter)
 app.use('/auth', authRouter)
 
 //connection

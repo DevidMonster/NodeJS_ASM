@@ -5,7 +5,8 @@ const productSchema = Joi.object({
     name: Joi.string().required().min(3),
     price: Joi.number().required().min(0),
     // image: Joi.string().required(),
-    description: Joi.string().min(32)
+    description: Joi.string().min(32),
+    products: Joi.array().items(Joi.string())
 })
 
 const getAllProducts = async (req, res) => {
