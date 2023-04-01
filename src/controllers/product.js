@@ -4,13 +4,13 @@ import Joi from 'joi';
 const productSchema = Joi.object({
     name: Joi.string().required().min(3),
     price: Joi.number().required().min(0),
-    image: Joi.string().required(),
+    // image: Joi.string().required(),
     description: Joi.string().min(32)
 })
 
 const getAllProducts = async (req, res) => {
     try {
-        const products = await Product.find({})
+        const products = await Product.find({}).populate('categories')
         if (products.length === 0) {
             res.json({
                 message: "No products found",

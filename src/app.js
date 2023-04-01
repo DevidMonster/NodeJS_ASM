@@ -5,7 +5,7 @@ import cors from 'cors';
 
 import productRouter from './routes/product';
 import authRouter from './routes/auth';
-import cors from 'cors';
+import categories from './models/categories';
 
 //config
 dotenv.config()
@@ -15,7 +15,6 @@ const app = express();
 app.use(express.json())
 app.use(cors())
 
-app.use(cors())
 //router
 app.use('/api', productRouter)
 app.use('/auth', authRouter)

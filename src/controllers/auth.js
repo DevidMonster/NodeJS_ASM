@@ -21,9 +21,9 @@ const logIn = async (req, res) => {
             })
         }
 
-        const accessToken = jwt.sign({_id: user._id}, "devidmonster", {expiresIn: "1h"})
+        const accessToken = jwt.sign({ _id: user._id }, "devidmonster", { expiresIn: "1h" })
         user.password = undefined
-
+        console.log(user);
         res.status(200).json({
             message: 'Login successfully',
             accessToken,
@@ -38,7 +38,7 @@ const signUp = async (req, res) => {
     try {
         const userExist = await User.findOne({ email: req.body.email })
         const { error } = signupSchema.validate(req.body, { abortEarly: false })
-        
+
         if (error) {
             const errors = error.details.map((err) => err.message)
             return res.status(400).send({
@@ -56,10 +56,11 @@ const signUp = async (req, res) => {
         const user = await User.create({
             name: req.body.name,
             email: req.body.email,
-            password: hashedPassword
+            password: hashedPassword,
+            role: req.body.role
         })
 
-        const accessToken = jwt.sign({_id: user._id}, "devidmonster", {expiresIn: "1h"})
+        const accessToken = jwt.sign({ _id: user._id }, "devidmonster", { expiresIn: "1h" })
         user.password = undefined;
 
         res.status(200).json({
