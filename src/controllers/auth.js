@@ -23,7 +23,7 @@ const logIn = async (req, res) => {
 
         const accessToken = jwt.sign({ _id: user._id }, "devidmonster", { expiresIn: "1h" })
         user.password = undefined
-        console.log(user);
+        console.log(accessToken);
         res.status(200).json({
             message: 'Login successfully',
             accessToken,

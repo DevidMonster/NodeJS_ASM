@@ -8,17 +8,17 @@ const checkPermission = async (req, res, next) => {
         }
 
         const token = req.headers.authorization.split(" ")[1]
-
+        console.log(token);
         jwt.verify(token, "devidmonster", async (err, payload) => {
             if (err) {
                 if (err.name === 'JsonWebTokenError') {
-                    return res.json({
+                    return res.status(401).send({
                         message: 'JWT verification failed'
                     })
                 }
 
                 if (err.name === 'TokenExpiredError') {
-                    return res.json({
+                    return res.status(401).send({
                         message: 'JWT token has expired'
                     })
                 }
