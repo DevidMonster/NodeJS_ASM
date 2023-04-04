@@ -3,7 +3,7 @@ import Joi from 'joi';
 
 const categorySchema = Joi.object({
     name: Joi.string().required().min(3),
-    categories: Joi.array().items(Joi.string())
+    products: Joi.array().items(Joi.string()).required()
 })
 
 const getAllCategories = async (req, res) => {
@@ -72,7 +72,7 @@ const patchCategories = async (req, res) => {
         const category = await Category.findOne({ _id: req.params.id })
         res.json({
             message: "Update category successfully",
-            data: product
+            data: category
         })
     } catch (err) {
         res.status(500).send({ message: err })
@@ -94,11 +94,10 @@ const createCategory = async (req, res) => {
                 errors: errs
             })
         }
-        await Category.create(req.body)
-        const category = await Category.find({})
+        const category = await Category.create(req.body)
         res.json({
             message: "Create category successfully",
-            data: products
+            data: category
         })
     } catch (err) {
         res.status(500).send({ message: err })

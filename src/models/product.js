@@ -26,6 +26,7 @@ const productSchema = mongoose.Schema({
             ref: 'Category'
         }
     ]
+
 },
     { timestamps: true, versionKey: false }
 )

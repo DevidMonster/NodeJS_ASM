@@ -9,15 +9,29 @@ const checkPermission = async (req, res, next) => {
 
         const token = req.headers.authorization.split(" ")[1]
 
-        const { _id } = jwt.verify(token, "devidmonster")
+        jwt.verify(token, "devidmonster", async (err, payload) => {
+            if (err) {
+                if (err.name === 'JsonWebTokenError') {
+                    return res.json({
+                        message: 'JWT verification failed'
+                    })
+                }
 
-        const user = await User.findById(_id)
-        console.log(token);
-        if (user.role !== "admin") {
-            return res.status(401).send({ message: 'Not admin' })
-        }
-        req.user = user
-        next()
+                if (err.name === 'TokenExpiredError') {
+                    return res.json({
+                        message: 'JWT token has expired'
+                    })
+                }
+            }
+
+            const user = await User.findById(payload._id)
+            console.log(token);
+            if (user.role !== "admin") {
+                return res.status(401).send({ message: 'Not admin' })
+            }
+            req.user = user
+            next()
+        })
     } catch (error) {
         res.status(500).send({
             message: error
