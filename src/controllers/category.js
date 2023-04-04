@@ -68,7 +68,7 @@ const patchCategories = async (req, res) => {
                 errors: errs
             })
         }
-        await Category.replaceOne({ _id: req.params.id }, req.body)
+        await Category.findByIdAndUpdate(req.params.id , req.body, { new: true })
         const category = await Category.findOne({ _id: req.params.id })
         res.json({
             message: "Update category successfully",
