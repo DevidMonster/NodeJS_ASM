@@ -13,10 +13,10 @@ const productSchema = mongoose.Schema({
         required: true,
         min: 0,
     },
-    // image: {
-    //     type: String,
-    //     required: true,
-    // },
+    image: {
+        type: String,
+        required: true,
+    },
     description: {
         type: String,
         minLength: 32
