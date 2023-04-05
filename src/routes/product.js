@@ -1,6 +1,6 @@
 import { product } from '../controllers/product';
 import express from 'express';
-import checkPermission from '../middlewares/checkpermission';
+import checkPermission from '../middlewares/checkPermission';
 
 const router = express.Router()
 
