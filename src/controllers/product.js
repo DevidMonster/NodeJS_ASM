@@ -8,7 +8,7 @@ const productSchema = Joi.object({
     // image: Joi.string().required(),
     description: Joi.string().min(32),
     categories: Joi.array().items(Joi.string()).required()
-})  
+})
 
 const getAllProducts = async (req, res) => {
     try {
@@ -105,32 +105,40 @@ const createProducts = async (req, res) => {
             for (const err of error.details) {
                 errs.push(err.message)
             }
-            return res.json({
+            return res.status(400).send({
                 message: 'Form error',
                 errors: errs
             })
         }
         const products = await Product.create(req.body)
-        console.log(products)
-        if (!product) { 
-            return res.json({
+        if (!product) {
+            return res.status(400).send({
                 message: "Không thêm sản phẩm",
             });
         }
-        for(const cateId of products.categories) {
-            const categpry =  await Category.findByIdAndUpdate(cateId, {
-                $addToSet: {
-                    products: product._id,
-                },
-            },{ new: true });
-            console.log(categpry);
-        }
+        products?.categories.forEach(async (cate) => {
+            try {
+                console.log(cate);
+                await Category.findByIdAndUpdate(cate, {
+                    $addToSet: {
+                        products: product._id,
+                    },
+                });
+            } catch (error) {
+                return res.status(400).send({
+                    message: "Lỗi khi thêm sản phẩm",
+                });
+            }
+        });
+
         res.json({
             message: "Create product successfully",
             data: products
         })
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).json({
+            message: err.message,
+        })
     }
 }
 
