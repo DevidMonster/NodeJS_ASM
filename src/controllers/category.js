@@ -4,7 +4,7 @@ import Product from '../models/product';
 
 const categorySchema = Joi.object({
     name: Joi.string().required().min(3),
-    products: Joi.array().items(Joi.string()).required()
+    products: Joi.array().items(Joi.string())
 })
 
 const getAllCategories = async (req, res) => {
