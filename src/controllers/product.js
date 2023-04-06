@@ -37,7 +37,7 @@ const getAllProducts = async (req, res) => {
             })
         }
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
@@ -55,20 +55,33 @@ const getDetailProducts = async (req, res) => {
             })
         }
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
 const removeProducts = async (req, res) => {
     try {
         const product = await Product.findOne({ _id: req.params.id })
+
+        const categories = await Category.find({})
+        for (const category of categories) {
+            if (category.products.includes(product._id)) {
+                console.log(product._id)
+                await Category.findByIdAndUpdate(category._id, {
+                    $pull: {
+                        products: product._id
+                    }
+                });
+            }
+        }
         await Product.findOneAndDelete({ _id: req.params.id })
+
         res.json({
             message: "Delete product successfully",
             data: product
         })
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
@@ -86,13 +99,42 @@ const patchProducts = async (req, res) => {
             })
         }
         await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        const product = await Product.findOne({ _id: req.params.id })
+        const product = await Product.findOne({ _id: req.params.id }).populate('categories')
+        if (!product) {
+            return res.status(400).send({
+                message: "Không lấy được sản phẩm"
+            })
+        }
+
+        const categories = await Category.find({}).populate('products')
+        //remove id product from Category if product delete categoryId
+        for (const category of categories) {
+            category.products.forEach(async (prd) => {
+                if (!prd.categories.includes(product._id))
+                    await Category.findByIdAndUpdate(category._id, {
+                        $pull: {
+                            products: product._id
+                        }
+                    });
+            })
+        }
+
+        //add id product from Category if product add categoryId
+        product?.categories.forEach(async (cate) => {
+            if (!cate.products.includes(product._id)) {
+                await Category.findByIdAndUpdate(cate._id, {
+                    $addToSet: {
+                        products: product._id,
+                    },
+                });
+            }
+        })
         res.json({
             message: "Update product successfully",
             data: product
         })
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
@@ -110,13 +152,13 @@ const createProducts = async (req, res) => {
                 errors: errs
             })
         }
-        const products = await Product.create(req.body)
+        const product = await Product.create(req.body)
         if (!product) {
             return res.status(400).send({
                 message: "Không thêm sản phẩm",
             });
         }
-        products?.categories.forEach(async (cate) => {
+        product?.categories.forEach(async (cate) => {
             try {
                 console.log(cate);
                 await Category.findByIdAndUpdate(cate, {
@@ -133,7 +175,7 @@ const createProducts = async (req, res) => {
 
         res.json({
             message: "Create product successfully",
-            data: products
+            data: product
         })
     } catch (err) {
         res.status(500).json({

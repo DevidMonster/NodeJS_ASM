@@ -1,5 +1,6 @@
 import Category from '../models/category';
 import Joi from 'joi';
+import Product from '../models/product';
 
 const categorySchema = Joi.object({
     name: Joi.string().required().min(3),
@@ -20,7 +21,7 @@ const getAllCategories = async (req, res) => {
             })
         }
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
@@ -38,20 +39,42 @@ const getDetailCategory = async (req, res) => {
             })
         }
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
 const removeCategories = async (req, res) => {
     try {
         const category = await Category.findOne({ _id: req.params.id })
+
+        const products = await Product.find({})
+        for (const product of products) {
+            if (product.categories.includes(category._id)) {
+                console.log(category._id)
+                await Product.findByIdAndUpdate(product._id, {
+                    $pull: {
+                        categories: category._id
+                    }
+                });
+            }
+            // product.categories.forEach(async (cate) => {
+            //     if (cate == category._id) {
+            //         console.log(cate, category._id)
+            //         await Product.findByIdAndUpdate(product._id, {
+            //              $pull: {
+            //                  categories: cate
+            //              }
+            //         });
+            //     }
+            // })
+        }
         await Category.findOneAndDelete({ _id: req.params.id })
         res.json({
             message: "Delete category successfully",
             data: category
         })
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
@@ -68,14 +91,14 @@ const patchCategories = async (req, res) => {
                 errors: errs
             })
         }
-        await Category.findByIdAndUpdate(req.params.id , req.body, { new: true })
+        await Category.findByIdAndUpdate(req.params.id, req.body, { new: true })
         const category = await Category.findOne({ _id: req.params.id })
         res.json({
             message: "Update category successfully",
             data: category
         })
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
@@ -100,7 +123,7 @@ const createCategory = async (req, res) => {
             data: category
         })
     } catch (err) {
-        res.status(500).send({ message: err })
+        res.status(500).send({ message: err.message })
     }
 }
 
