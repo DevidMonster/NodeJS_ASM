@@ -26,17 +26,51 @@ const getAllCategories = async (req, res) => {
 }
 
 const getDetailCategory = async (req, res) => {
+    const categoryId = req.params.id;
+    const { _page = 1, _limit = 10, _sort = "createdAt", _order = "asc", _embed = false } = req.query;
+    const options = {
+        page: _page,
+        limit: _limit,
+        sort: { [_sort]: _order === "desc" ? -1 : 1 },
+    };
+    const populateOptions = _embed === "" ? [{ path: "products"}] : [];
     try {
-        const category = await Category.find({ _id: req.params.id })
+        const category = await Category.find({ _id: categoryId })
         if (category.length === 0) {
-            res.json({
+            return res.json({
                 message: "No category found",
             })
+
+        }
+        const results = await Category.paginate({ _id: categoryId }, { ...options, populate: populateOptions});
+        console.log(results.docs);
+        if (results.docs.length === 0) {
+            return res.status(404).json({
+                message: "No products found in this category",
+            });
+        }
+        if (_embed === "") {
+            return res.json({
+                data: {
+                    category,
+                    products: results.docs[0].products,
+                },
+                pagination: {
+                    currentPage: results.page,
+                    totalPages: results.totalPages,
+                    totalItems: results.totalDocs,
+                },
+            });
         } else {
-            res.json({
-                message: "Get category successfully",
-                data: category
-            })
+            return res.status(200).json({
+                data: results.docs,
+                pagination: {
+                    currentPage: results.page,
+                    totalPages: results.totalPages,
+                    totalItems: results.totalDocs,
+                },
+            });
+        
         }
     } catch (err) {
         res.status(500).send({ message: err.message })
@@ -57,16 +91,6 @@ const removeCategories = async (req, res) => {
                     }
                 });
             }
-            // product.categories.forEach(async (cate) => {
-            //     if (cate == category._id) {
-            //         console.log(cate, category._id)
-            //         await Product.findByIdAndUpdate(product._id, {
-            //              $pull: {
-            //                  categories: cate
-            //              }
-            //         });
-            //     }
-            // })
         }
         await Category.findOneAndDelete({ _id: req.params.id })
         res.json({

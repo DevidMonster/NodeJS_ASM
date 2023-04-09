@@ -12,28 +12,32 @@ const productSchema = Joi.object({
 
 const getAllProducts = async (req, res) => {
     try {
-        const { _sort = "createAt", _order = "asc", _limit = 10, _page = 1 } = req.query;
+        const { _sort = "createAt", _order = "asc", _limit = 100, _page = 1, _expand = false} = req.query;
         const options = {
             page: _page,
             limit: _limit,
             sort: {
                 [_sort]: _order === "desc" ? -1 : 1,
             },
-            populate: {
-                path: 'categories',
-                select: 'name'
-            }
         };
-        const products = await Product.paginate({}, options);
+        const populated = _expand === "" ? [{
+            path: 'categories'
+        }] : []
+        const products = await Product.paginate({}, {...options, populate: populated});
 
-        if (products.length === 0) {
+        if (products.docs.length === 0) {
             res.json({
                 message: "No products found",
             })
         } else {
             res.json({
                 message: "Get all products successfully",
-                data: products
+                data: products.docs,
+                pagination: {
+                    currentPage: products.page,
+                    totalPages: products.totalPages,
+                    totalItems: products.totalDocs,
+                },
             })
         }
     } catch (err) {
@@ -63,17 +67,14 @@ const removeProducts = async (req, res) => {
     try {
         const product = await Product.findOne({ _id: req.params.id })
 
-        const categories = await Category.find({})
-        for (const category of categories) {
-            if (category.products.includes(product._id)) {
-                console.log(product._id)
-                await Category.findByIdAndUpdate(category._id, {
-                    $pull: {
-                        products: product._id
-                    }
-                });
-            }
-        }
+        product.categories.forEach(async cate => {
+            await Category.findOneAndUpdate(cate, {
+                $pull: {
+                    products: product._id
+                }
+            })
+            
+        });
         await Product.findOneAndDelete({ _id: req.params.id })
 
         res.json({
@@ -98,37 +99,34 @@ const patchProducts = async (req, res) => {
                 errors: errs
             })
         }
-        await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        const product = await Product.findOne({ _id: req.params.id }).populate('categories')
+        const product = await Product.findOne({ _id: req.params.id })
         if (!product) {
             return res.status(400).send({
                 message: "Không lấy được sản phẩm"
             })
         }
 
-        const categories = await Category.find({}).populate('products')
         //remove id product from Category if product delete categoryId
-        for (const category of categories) {
-            category.products.forEach(async (prd) => {
-                if (!prd.categories.includes(product._id))
-                    await Category.findByIdAndUpdate(category._id, {
-                        $pull: {
-                            products: product._id
-                        }
-                    });
+        product.categories.forEach(async cate => {
+            console.log(cate, 1);
+            await Category.findOneAndUpdate(cate, {
+                $pull: {
+                    products: product._id
+                }
             })
-        }
+        })
 
         //add id product from Category if product add categoryId
-        product?.categories.forEach(async (cate) => {
-            if (!cate.products.includes(product._id)) {
-                await Category.findByIdAndUpdate(cate._id, {
-                    $addToSet: {
-                        products: product._id,
-                    },
-                });
-            }
+        req.body.categories.forEach(async cate => {
+            console.log(cate, 2);
+            await Category.findOneAndUpdate({_id: cate}, {
+                $addToSet: {
+                    products: product._id
+                }
+            })
         })
+
+        await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json({
             message: "Update product successfully",
             data: product
