@@ -50,7 +50,7 @@ const getDetailCategory = async (req, res) => {
             });
         }
         if (_embed === "") {
-            return res.json({
+            return res.json({   
                 data: {
                     category,
                     products: results.docs[0].products,

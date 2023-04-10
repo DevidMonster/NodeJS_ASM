@@ -8,6 +8,7 @@
     "start": "nodemon --experimental-specifier-resolution=node ./src/app.js",
     "watch": "json-server-auth --watch db.json",
     "dev": "vite",
+    "realtime": "nodemon --experimental-specifier-resolution=node ./src/asideApp.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -24,10 +25,12 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.2",
     "mongoose-paginate-v2": "^1.7.1",
+    "socket.io": "^4.6.1",
     "yup": "^1.0.2"
   },
   "devDependencies": {
     "json-server-auth": "^2.1.0",
+    "nodemon": "^2.0.22",
     "vite": "^4.1.4",
     "vite-plugin-node": "^3.0.2"
   }

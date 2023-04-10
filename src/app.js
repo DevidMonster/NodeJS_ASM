@@ -6,6 +6,8 @@ import cors from 'cors';
 import productRouter from './routes/product';
 import authRouter from './routes/auth';
 import categoryRouter from './routes/category';
+import userRouter from './routes/user';
+import cmtRouter from './routes/comment';
 
 //config
 dotenv.config()
@@ -19,6 +21,9 @@ app.use(cors())
 app.use('/api', productRouter)
 app.use('/api', categoryRouter)
 app.use('/auth', authRouter)
+app.use('/api', userRouter)
+app.use('/api', cmtRouter)
+
 
 //connection
 const connect = async () => {
@@ -26,11 +31,12 @@ const connect = async () => {
         await mongoose.connect(process.env.URL_DB)
         console.log("You have connected to mongodb");
     } catch (err) {
-        console.log(err)
+        console.log(err.message)
     }
 }
 
 connect()
+
 
 //listen port
 export const viteNodeApp = app;

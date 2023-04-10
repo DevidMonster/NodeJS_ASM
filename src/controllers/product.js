@@ -22,7 +22,11 @@ const getAllProducts = async (req, res) => {
         };
         const populated = _expand === "" ? [{
             path: 'categories'
-        }] : []
+        }, {
+            path: 'comments'
+        }] : [{
+            path: 'comments'
+        }]
         const products = await Product.paginate({}, {...options, populate: populated});
 
         if (products.docs.length === 0) {
@@ -47,7 +51,7 @@ const getAllProducts = async (req, res) => {
 
 const getDetailProducts = async (req, res) => {
     try {
-        const product = await Product.find({ _id: req.params.id }).populate('categories')
+        const product = await Product.find({ _id: req.params.id }).populate(['categories', 'comments'])
         if (product.length === 0) {
             res.json({
                 message: "No product found",

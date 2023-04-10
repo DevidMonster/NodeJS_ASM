@@ -30,7 +30,7 @@ const logIn = async (req, res) => {
             user
         })
     } catch (err) {
-        res.status(400).send({ message: err })
+        res.status(400).send({ message: err.message })
     }
 }
 
@@ -47,7 +47,7 @@ const signUp = async (req, res) => {
         }
 
         if (userExist) {
-            res.status(400).send({
+            return res.status(400).send({
                 message: 'Email already exists'
             })
         }
@@ -69,7 +69,7 @@ const signUp = async (req, res) => {
             user
         })
     } catch (err) {
-        res.status(400).send({ message: err })
+        res.status(400).send({ message: err.message })
     }
 }
 

@@ -26,6 +26,12 @@ const productSchema = mongoose.Schema({
             type: Schema.Types.ObjectId,
             ref: 'Category'
         }
+    ],
+    comments: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Comment'
+        }
     ]
 
 },

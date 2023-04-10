@@ -16,9 +16,8 @@ export const signupSchema = joi.object({
         "string.empty": "Confirm password không được để trống",
         "string.required": "Trường confirm password là bắt buộc",
     }),
-    role: joi.string().required().messages({
+    role: joi.string().messages({
         "any.only": "Role không khớp",
-        "string.empty": "Role không được để trống",
-        "string.required": "Trường role là bắt buộc",
+        "string.empty": "Role không được để trống"
     })
 });
