@@ -1,5 +1,13 @@
 import Comment from "../models/comment";
 import Product from "../models/product";
+import Joi from 'joi';
+const cmtSchema = Joi.object({
+    userId: Joi.string().required(),
+    productId: Joi.string().required(),
+    subject: Joi.string().required(),
+    content: Joi.string().required().min(20),
+    userName: Joi.string().required()
+})
 
 const getComments = async (req, res) => {
     try {
@@ -41,6 +49,18 @@ const getComments = async (req, res) => {
 }
 const addComment = async (req, res) => {
     try {
+        const { error } = cmtSchema.validate(req.body, { abortEarly: false })
+        if (error) {
+            const errs = []
+            for (const err of error.details) {
+                errs.push(err.message)
+            }
+            return res.status(400).send({
+                message: 'Form error',
+                errors: errs
+            })
+        }
+
         const prd = await Product.findOne({ _id: req.body.productId })
         if(!prd) {
             return res.status(404).send({ message: "Product not found" })
