@@ -27,13 +27,13 @@ const getAllCategories = async (req, res) => {
 
 const getDetailCategory = async (req, res) => {
     const categoryId = req.params.id;
-    const { _page = 1, _limit = 10, _sort = "createdAt", _order = "asc", _embed = false } = req.query;
+    const { _page = 1, _limit = 10, _sort = "createdAt", _order = "asc", _embed } = req.query;
     const options = {
         page: _page,
         limit: _limit,
         sort: { [_sort]: _order === "desc" ? -1 : 1 },
     };
-    const populateOptions = _embed === "" ? [{ path: "products"}] : [];
+    const populateOptions = _embed !== undefined ? [{ path: "products"}] : [];
     try {
         const category = await Category.find({ _id: categoryId })
         if (category.length === 0) {
@@ -49,7 +49,7 @@ const getDetailCategory = async (req, res) => {
                 message: "No products found in this category",
             });
         }
-        if (_embed === "") {
+        if (_embed !== undefined) {
             return res.json({   
                 data: {
                     category,

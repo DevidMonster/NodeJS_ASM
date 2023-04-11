@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 import mongoosePaginate from "mongoose-paginate-v2";
-import mongooseDelete from "mongoose-delete";
+
 const productSchema = mongoose.Schema({
     name: {
         type: String,
@@ -21,6 +21,22 @@ const productSchema = mongoose.Schema({
         type: String,
         minLength: 32
     },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now,
+    },
+    // deletedAt: {
+    //     type: Date,
+    //     default: null,
+    // },
+    // deleted: {
+    //     type: Boolean,
+    //     default: false,
+    // },
     categories: [
         {
             type: Schema.Types.ObjectId,
@@ -38,9 +54,5 @@ const productSchema = mongoose.Schema({
     { timestamps: true, versionKey: false }
 )
 productSchema.plugin(mongoosePaginate);
-productSchema.plugin(mongooseDelete, {
-    deletedAt: true,
-    overrideMethods: true,
-});
 
 export default mongoose.model('Product', productSchema)

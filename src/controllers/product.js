@@ -12,15 +12,19 @@ const productSchema = Joi.object({
 
 const getAllProducts = async (req, res) => {
     try {
-        const { _sort = "createAt", _order = "asc", _limit = 100, _page = 1, _expand = false } = req.query;
+        const { _sort = "createAt", _order = "asc", _limit, _page = 1, _expand, _q = "" } = req.query;
+        console.log(_q);
         const options = {
             page: _page,
-            limit: _limit,
             sort: {
                 [_sort]: _order === "desc" ? -1 : 1,
             },
+            filter: {name: {$regex: _q, $options: "i"}}
         };
-        const populated = _expand === "" ? [{
+        if(_limit !== undefined) {
+            options.limit = _limit
+        }
+        const populated = _expand !== undefined ? [{
             path: 'categories'
         }, {
             path: 'comments'
@@ -70,22 +74,17 @@ const getDetailProducts = async (req, res) => {
 const removeProducts = async (req, res) => {
     try {
         const product = await Product.findOne({ _id: req.params.id })
-        const { isHardDelete } = req.body;
+        // const { isHardDelete } = req.body;
 
-        if (isHardDelete) {
-            product.categories.forEach(async cate => {
-                await Category.findOneAndUpdate(cate, {
-                    $pull: {
-                        products: product._id
-                    }
-                })
+        product.categories.forEach(async cate => {
+            await Category.findOneAndUpdate(cate, {
+                $pull: {
+                    products: product._id
+                }
+            })
 
-            });
-            await product.forceDelete()
-        } else {
-            await product.delete()
-        }
-
+        });
+        await Product.findOneAndDelete({ _id: req.params.id })
 
         res.json({
             message: "Delete product successfully",
@@ -135,107 +134,106 @@ const restorePrd = async (req, res) => {
     }
 }
 
-    const patchProducts = async (req, res) => {
-        try {
-            const { error } = productSchema.validate(req.body, { abortEarly: false })
-            if (error) {
-                const errs = []
-                for (const err of error.details) {
-                    errs.push(err.message)
-                }
-                return res.json({
-                    message: 'Form error',
-                    errors: errs
-                })
+const patchProducts = async (req, res) => {
+    try {
+        const { error } = productSchema.validate(req.body, { abortEarly: false })
+        if (error) {
+            const errs = []
+            for (const err of error.details) {
+                errs.push(err.message)
             }
-            const product = await Product.findOne({ _id: req.params.id })
-            if (!product) {
-                return res.status(400).send({
-                    message: "Không lấy được sản phẩm"
-                })
-            }
-
-            //remove id product from Category if product delete categoryId
-            product.categories.forEach(async cate => {
-                console.log(cate, 1);
-                await Category.findOneAndUpdate(cate, {
-                    $pull: {
-                        products: product._id
-                    }
-                })
+            return res.json({
+                message: 'Form error',
+                errors: errs
             })
-
-            //add id product from Category if product add categoryId
-            req.body.categories.forEach(async cate => {
-                console.log(cate, 2);
-                await Category.findOneAndUpdate({ _id: cate }, {
-                    $addToSet: {
-                        products: product._id
-                    }
-                })
-            })
-
-            await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            res.json({
-                message: "Update product successfully",
-                data: product
-            })
-        } catch (err) {
-            res.status(500).send({ message: err.message })
         }
-    }
+        const product = await Product.findOne({ _id: req.params.id })
+        if (!product) {
+            return res.status(400).send({
+                message: "Không lấy được sản phẩm"
+            })
+        }
 
-
-    const createProducts = async (req, res) => {
-        try {
-            const { error } = productSchema.validate(req.body, { abortEarly: false })
-            if (error) {
-                const errs = []
-                for (const err of error.details) {
-                    errs.push(err.message)
+        //remove id product from Category if product delete categoryId
+        product.categories.forEach(async cate => {
+            console.log(cate, 1);
+            await Category.findOneAndUpdate(cate, {
+                $pull: {
+                    products: product._id
                 }
-                return res.status(400).send({
-                    message: 'Form error',
-                    errors: errs
-                })
+            })
+        })
+
+        //add id product from Category if product add categoryId
+        req.body.categories.forEach(async cate => {
+            console.log(cate, 2);
+            await Category.findOneAndUpdate({ _id: cate }, {
+                $addToSet: {
+                    products: product._id
+                }
+            })
+        })
+
+        await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({
+            message: "Update product successfully",
+            data: product
+        })
+    } catch (err) {
+        res.status(500).send({ message: err.message })
+    }
+}
+
+
+const createProducts = async (req, res) => {
+    try {
+        const { error } = productSchema.validate(req.body, { abortEarly: false })
+        if (error) {
+            const errs = []
+            for (const err of error.details) {
+                errs.push(err.message)
             }
-            const product = await Product.create(req.body)
-            if (!product) {
+            return res.status(400).send({
+                message: 'Form error',
+                errors: errs
+            })
+        }
+        const product = await Product.create(req.body)
+        if (!product) {
+            return res.status(400).send({
+                message: "Không thêm sản phẩm",
+            });
+        }
+        product?.categories.forEach(async (cate) => {
+            try {
+                console.log(cate);
+                await Category.findByIdAndUpdate(cate, {
+                    $addToSet: {
+                        products: product._id,
+                    },
+                });
+            } catch (error) {
                 return res.status(400).send({
-                    message: "Không thêm sản phẩm",
+                    message: "Lỗi khi thêm sản phẩm",
                 });
             }
-            product?.categories.forEach(async (cate) => {
-                try {
-                    console.log(cate);
-                    await Category.findByIdAndUpdate(cate, {
-                        $addToSet: {
-                            products: product._id,
-                        },
-                    });
-                } catch (error) {
-                    return res.status(400).send({
-                        message: "Lỗi khi thêm sản phẩm",
-                    });
-                }
-            });
+        });
 
-            res.json({
-                message: "Create product successfully",
-                data: product
-            })
-        } catch (err) {
-            res.status(500).json({
-                message: err.message,
-            })
-        }
+        res.json({
+            message: "Create product successfully",
+            data: product
+        })
+    } catch (err) {
+        res.status(500).json({
+            message: err.message,
+        })
     }
+}
 
-    export const product = {
-        getAllProducts,
-        getDetailProducts,
-        removeProducts,
-        patchProducts,
-        createProducts,
-        restorePrd
-    }
+export const product = {
+    getAllProducts,
+    getDetailProducts,
+    removeProducts,
+    patchProducts,
+    createProducts
+}
